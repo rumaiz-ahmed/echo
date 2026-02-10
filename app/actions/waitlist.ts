@@ -2,39 +2,25 @@
 
 import { Resend } from 'resend';
 import { z } from 'zod';
-import { createHmac } from 'crypto';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID!;
 const YOUR_EMAIL = process.env.ALERT_EMAIL!;
-// Ensure you add this to your .env
-const AUTH_SECRET = process.env.AUTH_SECRET!;
 
-// 1. Define a Schema for validation
 const WaitlistSchema = z.object({
   email: z.string().email('Invalid transmission coordinates.'),
-  // A honeypot field to catch simple bots
-  firstname: z.string().max(0).optional(),
+  firstname: z.string().max(0).optional(), // Honeypot
 });
 
-/**
- * Generates a secure HMAC signature
- */
-function generateSignature(email: string) {
-  return createHmac('sha256', AUTH_SECRET).update(email).digest('hex');
-}
-
 export async function handleWaitlist(formData: FormData) {
-  // 2. Validate Input
   const rawData = {
     email: formData.get('email'),
-    firstname: formData.get('firstname'), // The hidden honeypot
+    firstname: formData.get('firstname'),
   };
 
   const validated = WaitlistSchema.safeParse(rawData);
 
   if (!validated.success) {
-    // If "firstname" was filled, it's a bot. We return success to fool it.
     if (rawData.firstname) return { success: true };
     return { success: false, error: validated.error.message };
   }
@@ -42,39 +28,46 @@ export async function handleWaitlist(formData: FormData) {
   const { email } = validated.data;
 
   try {
-    // 3. Save to Resend (Database)
+    // 1. Save to Resend Audience
     await resend.contacts.create({
       email,
       unsubscribed: false,
       audienceId: AUDIENCE_ID,
     });
 
-    // 4. Secure Signature Logic
-    const ts = Date.now().toString(); // Use a numeric string for easier handling
-    const hmacSig = createHmac('sha256', AUTH_SECRET)
-      .update(`${email}-${ts}`) // Bind the email and time together
-      .digest('hex');
+    // 2. Prepare the Mailto Content
+    // We encode the strings so they work safely in a URL
+    const subject = encodeURIComponent("You're in. Welcome to ECHO.");
+    const body = encodeURIComponent(
+      `Welcome to the shadows.\n\n` +
+        `Your identity has been verified. You now have access to a space where words are written in sand. ` +
+        `Every message, thread, and trace of your presence is deleted every 24 hours.\n\n` +
+        `The next cycle begins soon.\n\n` +
+        `Enjoy the silence.\n` +
+        `— The ECHO Team`,
+    );
 
-    // ADD &ts=${ts} TO THE END OF THIS STRING:
-    const approveLink = `${process.env.NEXT_PUBLIC_APP_URL}/api/approve-ghost?email=${encodeURIComponent(email)}&sig=${hmacSig}&ts=${ts}`;
+    const mailtoLink = `mailto:${email}?subject=${subject}&body=${body}`;
 
-    // 5. Admin Alert
+    // 3. Send the "Magic Link" Alert to YOU
     await resend.emails.send({
-      from: 'ECHO PROTOCOL <system@resend.dev>',
+      from: 'ECHO PROTOCOL <onboarding@resend.dev>',
       to: YOUR_EMAIL,
-      subject: `[LOG] NEW IDENTITY: ${email}`,
+      subject: `[NEW_GHOST] ${email}`,
       html: `
-        <p>IDENT: ${email}</p>
-        <a href="${approveLink}">EXECUTE_WELCOME_SEQUENCE</a>
+        <div style="background: #000; color: #6366f1; padding: 40px; font-family: monospace; border: 1px solid #333;">
+          <h2 style="color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px;">IDENTITY DETECTED</h2>
+          <p style="color: #a1a1aa;">A new user has requested entry into the Void.</p>
+          <div style="background: #111; padding: 20px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>USER:</strong> ${email}</p>
+          </div>
+          <p style="color: #a1a1aa; font-size: 12px;">Clicking the button below will open your local mail app to send the welcome kit.</p>
+          <a href="${mailtoLink}" 
+             style="display: inline-block; background: #6366f1; color: #fff; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 8px;">
+            SEND_WELCOME_EMAIL
+          </a>
+        </div>
       `,
-    });
-
-    // 6. User Confirmation
-    await resend.emails.send({
-      from: 'ECHO <onboarding@resend.dev>',
-      to: email,
-      subject: `You have vanished. Welcome to ECHO.`,
-      html: `<h1>SIGNAL CAPTURED.</h1><p>You are whitelisted for Batch 01.</p>`,
     });
 
     return { success: true };
@@ -84,11 +77,8 @@ export async function handleWaitlist(formData: FormData) {
   }
 }
 
-// 7. Prevent API abuse by adding caching to stats
 export async function getRealtimeStats() {
   try {
-    // Note: In production, wrap this in React 'cache' or Next.js 'unstable_cache'
-    // to prevent hitting Resend rate limits on every page refresh.
     const { data } = await resend.contacts.list({ audienceId: AUDIENCE_ID });
     const count = data?.data?.length || 0;
     return { count, remaining: Math.max(0, 50 - count) };
