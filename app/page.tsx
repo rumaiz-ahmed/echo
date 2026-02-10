@@ -226,6 +226,15 @@ export default function EchoFullWaitlist() {
                         </div>
 
                         <form action={onSubmit} className="space-y-4">
+                          {/* 1. Add the Honeypot Field (Hidden from humans) */}
+                          <input
+                            type="text"
+                            name="firstname"
+                            style={{ display: 'none' }}
+                            tabIndex={-1}
+                            autoComplete="off"
+                          />
+
                           <Input
                             name="email"
                             type="email"
