@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     // 4. Execute the side effect: Send the "Welcome to the Void" Email
     await resend.emails.send({
-      from: 'ECHO <onboarding@resend.dev>',
+      from: 'ECHO <onboarding@mndly.vercel.app>',
       to: email,
       subject: `You're in. The clock starts now.`,
       html: `
