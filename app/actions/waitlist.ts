@@ -33,25 +33,34 @@ export async function handleWaitlist(formData: FormData) {
       audienceId: AUDIENCE_ID,
     });
 
-    // 2. INTERNAL ALERT (For You) - "The Terminal Look"
+    const secretHmac = Buffer.from(
+      `${email}-${process.env.RESEND_API_KEY}`,
+    ).toString('base64');
+    const approveLink = `${process.env.NEXT_PUBLIC_APP_URL}/api/approve-ghost?email=${encodeURIComponent(email)}&sig=${secretHmac}`;
+
     await resend.emails.send({
       from: 'ECHO PROTOCOL <system@resend.dev>',
       to: YOUR_EMAIL,
       subject: `[LOG] NEW IDENTITY DETECTED: ${email}`,
       html: `
-        <div style="background-color: #050505; color: #a1a1aa; padding: 40px; font-family: 'Courier New', Courier, monospace; line-height: 1.6;">
-          <div style="border-left: 2px solid #6366f1; padding-left: 20px;">
-            <h1 style="color: #ffffff; font-size: 14px; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 30px;">> System.Log: New_Ghost_Added</h1>
-            <p style="margin: 0;">IDENT: <span style="color: #6366f1;">${email}</span></p>
-            <p style="margin: 0;">TIME: ${timestamp}</p>
-            <p style="margin: 0;">LEGAL: Protocol_Accepted_v1.0</p>
-            <p style="margin: 0;">STATUS: Awaiting_Midnight_Purge</p>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1f1f23; color: #3f3f46; font-size: 11px;">
-              END OF TRANSMISSION
-            </div>
-          </div>
+    <div style="background-color: #050505; color: #a1a1aa; padding: 40px; font-family: 'Courier New', Courier, monospace; line-height: 1.6;">
+      <div style="border-left: 2px solid #6366f1; padding-left: 20px;">
+        <h1 style="color: #ffffff; font-size: 14px; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 30px;">> System.Log: New_Ghost_Added</h1>
+        <p style="margin: 0;">IDENT: <span style="color: #6366f1;">${email}</span></p>
+        <p style="margin: 0;">TIME: ${timestamp}</p>
+        <p style="margin: 0;">LEGAL: Protocol_Accepted_v1.0</p>
+        <p style="margin: 0; margin-bottom: 30px;">STATUS: Awaiting_Manual_Override</p>
+        
+        <a href="${approveLink}" style="display: inline-block; background-color: #6366f1; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: bold; font-size: 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.1em;">
+          EXECUTE_WELCOME_SEQUENCE
+        </a>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1f1f23; color: #3f3f46; font-size: 11px;">
+          CAUTION: Clicking above triggers an immediate external transmission.
         </div>
-      `,
+      </div>
+    </div>
+  `,
     });
 
     // 3. CONFIRMATION (For User) - "The Ghost Card"

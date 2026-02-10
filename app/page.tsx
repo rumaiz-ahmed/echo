@@ -11,8 +11,6 @@ import Link from 'next/link';
 import { handleWaitlist, getRealtimeStats } from '@/app/actions/waitlist';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox'; // Ensure this shadcn component exists
 import {
   Card,
   CardContent,
@@ -24,21 +22,16 @@ import {
   Ghost,
   CheckCircle,
   ArrowRight,
-  Zap,
   Eye,
   History,
   UserX,
   MessageSquareQuote,
-  ShieldAlert,
-  AlertTriangle,
 } from 'lucide-react';
 
 export default function EchoFullWaitlist() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const [stats, setStats] = useState({ count: 42, remaining: 8 });
   const [timeLeft, setTimeLeft] = useState({ minutes: 14, seconds: 59 });
-  const [acceptedLegal, setAcceptedLegal] = useState(false);
-  const [shake, setShake] = useState(false);
 
   const targetRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: targetRef });
@@ -61,12 +54,6 @@ export default function EchoFullWaitlist() {
   }, []);
 
   async function onSubmit(formData: FormData) {
-    if (!acceptedLegal) {
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      return;
-    }
-
     setStatus('loading');
     const res = await handleWaitlist(formData);
     if (res.success) {
