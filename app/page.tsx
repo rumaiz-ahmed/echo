@@ -348,13 +348,24 @@ export default function EchoFullWaitlist() {
           <p className="text-[10px] font-black tracking-[0.4em] uppercase text-center md:text-left">
             ECHO BY MNDLY // OPERATING IN THE SHADOWS // 2026
           </p>
-          <div className="flex gap-8">
+          <div className="flex gap-8 items-center">
             <Link
               href="/legal"
               className="text-[10px] font-black tracking-widest uppercase hover:text-primary transition-colors"
             >
               Legal Protocol
             </Link>
+            <a
+              href="https://launchigniter.com/product/echo?ref=badge-echo"
+              target="_blank"
+            >
+              <img
+                src="https://launchigniter.com/api/badge/echo?theme=light"
+                alt="Featured on LaunchIgniter"
+                width="212"
+                height="55"
+              />
+            </a>
           </div>
         </footer>
       </div>
