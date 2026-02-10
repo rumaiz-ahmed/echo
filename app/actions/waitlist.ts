@@ -40,7 +40,6 @@ export async function handleWaitlist(formData: FormData) {
   }
 
   const { email } = validated.data;
-  const timestamp = new Date().toISOString();
 
   try {
     // 3. Save to Resend (Database)
@@ -50,18 +49,14 @@ export async function handleWaitlist(formData: FormData) {
       audienceId: AUDIENCE_ID,
     });
 
-    // Add timestamp to the HMAC generation
-    function generateSignature(email: string, ts: string) {
-      return createHmac('sha256', AUTH_SECRET)
-        .update(`${email}-${ts}`) // Bind the email and time together
-        .digest('hex');
-    }
-
     // 4. Secure Signature Logic
-    const hmacSig = generateSignature(email, timestamp);
+    const ts = Date.now().toString(); // Use a numeric string for easier handling
+    const hmacSig = createHmac('sha256', AUTH_SECRET)
+      .update(`${email}-${ts}`) // Bind the email and time together
+      .digest('hex');
 
-    // We use a hex-encoded HMAC instead of base64 concatenation
-    const approveLink = `${process.env.NEXT_PUBLIC_APP_URL}/api/approve-ghost?email=${encodeURIComponent(email)}&sig=${hmacSig}`;
+    // ADD &ts=${ts} TO THE END OF THIS STRING:
+    const approveLink = `${process.env.NEXT_PUBLIC_APP_URL}/api/approve-ghost?email=${encodeURIComponent(email)}&sig=${hmacSig}&ts=${ts}`;
 
     // 5. Admin Alert
     await resend.emails.send({
