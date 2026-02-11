@@ -1,0 +1,26 @@
+# Echo by mndly
+
+> Echo by mndly — The Anti-Social Network. A Discord alternative built for people who want community without the noise.
+
+## What is Echo?
+
+Echo by mndly is a real-time communication and community platform — "The Anti-Social Network." It is a Discord alternative that allows users to create servers, channels, and communities to chat, connect, and collaborate, with a focus on intentional, distraction-free interaction.
+
+## Key Features
+
+- Real-time messaging
+- Community servers and channels
+- A modern, clean interface
+- Built as an alternative to Discord
+
+## URL
+
+https://mndly.vercel.app
+
+## Use Cases
+
+- Online communities
+- Friend groups
+- Gaming communities
+- Study groups
+- Alternative to Discord, Slack, or other chat platforms
